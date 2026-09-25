@@ -87,8 +87,8 @@ POST /api/v1/chat  { "question": "..." }
 需要 Docker Desktop 已启动。
 
 ```bash
-git clone <repo-url>
-cd 项目二
+git clone https://github.com/PLusLcn/ai-knowledge-base.git
+cd ai-knowledge-base
 
 # 配置密钥（项目根建 .env，只有一行）
 echo "SILICONFLOW_API_KEY=你的密钥" > .env
@@ -120,11 +120,24 @@ DOCKER_BUILDKIT=0 docker compose up -d --build
 
 ### 本机开发方式
 
+`venv/` 和 `node_modules/` 都不进版本库，clone 下来要先各建一次：
+
 ```bash
-# 后端
+# 后端依赖（Windows；macOS/Linux 用 venv/bin/pip）
+python -m venv venv
+venv/Scripts/pip install -r backend/requirements.txt
+
+# 前端依赖
+cd frontend && npm install && cd ..
+```
+
+然后分两个终端起服务：
+
+```bash
+# 终端 1 —— 后端
 cd backend && ../venv/Scripts/python.exe -m uvicorn app.main:app --reload --port 8000
 
-# 前端
+# 终端 2 —— 前端
 cd frontend && npm run dev
 ```
 
