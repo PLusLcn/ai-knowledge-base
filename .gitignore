@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+*.egg-info/
+
+# 环境变量
+.env
+
+# 向量索引文件（FAISS 序列化）
+*.faiss
+*.pkl
+
+# 文档数据
+# ⚠️ gitignore 里的 * 不匹配 /，所以 `data/*.txt` 只能挡住 data/ 直属的文件，
+#    挡不住 data/samples/xxx.txt 这种两层路径。要用目录形式写。
+#
+# 上传目录 = 运行期数据，不进版本库
+data/uploads/
+# 种子文档 data/samples/ 要保留 —— 别人 clone 下来得有东西可检索
+# （所以不加 data/samples/）
+data/*.pdf
+
+# ------------------------------------------------------------
+# 不进公开仓库的东西（文件都留在本机，只是不提交）
+# ------------------------------------------------------------
+
+# 学习用的练习脚本：互相 import、只能在 cwd=backend/ 下跑，别人 clone 下来跑不通。
+# 学习过程已经完整记录在 docs/ 里了，这些脚本没有增量价值。
+backend/test_*.py
+
+# 个人学习计划文档（不是项目的一部分）
+AI全能开发_免费学习计划总纲.md
+用Claude高效学习_行动大纲.md
+project-2-learning-plan.md
+
+# Claude Code 的本地配置（权限白名单 + 一堆本机绝对路径）
+.claude/
+
+# Jupyter
+notebook/.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+dist/

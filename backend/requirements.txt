@@ -1,0 +1,32 @@
+# ===== AI知识库问答系统 依赖清单（2026-09-04 对齐实际环境）=====
+
+# FastAPI 基础
+fastapi==0.139.*
+uvicorn[standard]==0.51.*
+pydantic==2.13.*
+python-dotenv==1.2.*
+python-multipart==0.0.32
+# LangChain 全家桶
+# 注意：实际环境是 1.x 生态，与教程/旧文档常见的 0.3 不兼容，勿降级照抄
+langchain==1.3.*
+langchain-core==1.4.*            # 代码直接 import langchain_core.embeddings
+langchain-community==0.4.*       # FAISS / TextLoader；已被标注 sunset，后续关注迁移
+langchain-openai==1.3.*          # ChatOpenAI 调硅基流动
+langchain-text-splitters==1.1.*  # RecursiveCharacterTextSplitter
+
+# 文档处理
+pypdf==6.*                       # PDF 解析（PDF 加载器暂缓，先不 import）
+
+# 向量存储
+faiss-cpu==1.14.*
+
+# HTTP
+requests==2.34.*
+httpx==0.28.*                    # 代码没直接用；openai SDK 依赖它，装了也会被带进来
+
+# ===== 以下当前不装（本机装了也不影响，只是干净机器跑 pip install -r 不会装）=====
+# ragas                  # RAGAS 评估
+# sentence-transformers  # 本地嵌入模型（备用）。它拖 torch+transformers，镜像会胖 2~3GB，要用再装
+# python-docx            # Word 文档扩展
+# 注①：rerank 不需要 rerankers 包 —— reranker.py 直接用 requests 调硅基流动的 /rerank
+# 注②：fastapi-cors 不需要 —— CORSMiddleware 是 fastapi 内置的

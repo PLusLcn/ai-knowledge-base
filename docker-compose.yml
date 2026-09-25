@@ -1,0 +1,92 @@
+# ============================================================
+# 一条命令拉起整个项目
+#   docker compose up -d     启动（-d = 后台）
+#   docker compose ps        看状态
+#   docker compose logs -f   看日志
+#   docker compose down      停止并删除容器（卷不删，数据还在）
+#   docker compose up -d --build   改了代码后重新构建再起
+# ============================================================
+
+# ⭐ 项目名。不写的话 compose 用【当前目录名】当项目名，
+#    而你的目录叫「项目二」—— 中文不能做容器名（只允许 [a-zA-Z0-9_.-]），会直接报错。
+#    写死成 kb 之后，容器名就是 kb-backend-1 / kb-frontend-1。
+name: kb
+
+services:
+
+  # ----------------------------------------------------------
+  # 后端：FastAPI + RAG
+  #   ⭐ 服务名 backend 就是 nginx.conf 里 proxy_pass 的那个 backend
+  #      compose 会把服务名注册进 Docker 内部 DNS，
+  #      所以前端容器里写 http://backend:8000 就能找到它
+  # ----------------------------------------------------------
+  backend:
+    build:
+      context: .                        # 构建上下文 = 项目根（和手敲时那个点一样）
+      dockerfile: backend/Dockerfile    # 从根算起的 Dockerfile 路径
+    image: kb-backend
+    container_name: kb-backend
+
+    # 密钥注入：等价于手敲的 --env-file .env
+    # ⚠️ .env 文件本身没进镜像（.dockerignore 排除了），值只在容器启动时注入
+    env_file: .env
+
+    volumes:
+      # ① 上传的文档 + 种子数据。不挂卷的话，容器一删，上传的文件全没
+      - kb_data:/app/data
+      # ② FAISS 索引。不挂卷的话，容器一删，向量索引全没 → 检索直接失效
+      #    ⚠️ 这两个必须一起持久化：
+      #       只留索引不留源文件 → 就是 3.8 那个"删了文件还能回答"的问题
+      #       只留源文件不留索引 → 每次重建都要重新算 embedding，慢
+      - kb_index:/app/faiss_index
+
+    ports:
+      # 暴露到宿主机只是为了方便调试（能直接开 /docs 看 Swagger）
+      # 生产环境可以整段删掉：前端走内部网络 http://backend:8000，不需要经过宿主机
+      - "8000:8000"
+
+    networks:
+      - kb-net
+
+  # ----------------------------------------------------------
+  # 前端：nginx 发静态文件 + 转发 /api
+  # ----------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: kb-frontend
+    container_name: kb-frontend
+
+    ports:
+      # 8080 被项目一的 blog-backend 占了，所以用 8081
+      # 左边是宿主机端口，右边是容器里的 80（nginx.conf 里 listen 的那个）
+      - "8081:80"
+
+    # ⚠️ depends_on 只保证【启动顺序】（先起 backend 再起 frontend），
+    #    不保证 backend 已经"准备好服务"。
+    #    这正是为什么 nginx.conf 里要用 resolver + 变量：
+    #    万一 backend 起慢了或挂了，nginx 照样能启动，只是 /api 报 502，
+    #    而不是整个前端跟着崩掉。
+    depends_on:
+      - backend
+
+    networks:
+      - kb-net
+
+# ------------------------------------------------------------
+# 卷：Docker 管理的持久化存储，存在宿主机上，容器删了它还在
+#   不写 driver 默认就是 local（存在 Docker Desktop 的虚拟磁盘里）
+# ------------------------------------------------------------
+volumes:
+  kb_data:
+  kb_index:
+
+# ------------------------------------------------------------
+# 网络：一张自定义桥接网络
+#   两个容器都接上来 → 就能用【服务名】互相访问
+#   （不声明的话 compose 也会自动建一张默认的，这里写出来是为了看得见）
+# ------------------------------------------------------------
+networks:
+  kb-net:
+    driver: bridge
