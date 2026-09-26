@@ -35,6 +35,10 @@ AI全能开发_免费学习计划总纲.md
 用Claude高效学习_行动大纲.md
 project-2-learning-plan.md
 
+# 个人材料（简历等，含手机号/邮箱，绝不入库）
+*.docx
+*.pdf
+
 # Claude Code 的本地配置（权限白名单 + 一堆本机绝对路径）
 .claude/
 
